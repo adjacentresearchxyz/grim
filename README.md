@@ -17,7 +17,7 @@ You can get an OpenAI key from [platform.openai.com/settings](https://platform.o
 
 ## Usage
 
-1. Start the bot: `bun src/grim.ts`. Optionally, you can provide a scenario file, `bun src/grim.ts --scenario-file file_name`
+1. Start the bot: `bun src/grim.ts`. Optionally, you can provide a scenario file, `bun src/grim.ts --scenario-file file_name`. There is an example scenario file called `scenario.example.txt` if you want to get up and running quickly.
 1. Set your role with `/role <Your Name> - <Your Role>`
 1. Start the scenario with `/scenario <scenario_description>`. You don't need to provide `scenario_description` if you used a `scenario_file`
 1. Once the scenario is started, you can use these commands:

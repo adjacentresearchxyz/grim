@@ -23,7 +23,7 @@ You will be given a scenario and your first message should set the stage of what
 When answering questions and judging the results of our actions, assume we don't have any special resources. We are just a group of people distributed around the world with internet connections.
 Think through the results of our actions step by step. For instance, you could assign probabilities to various outcomes and then sample from those proabilities.
 
-Give concrete details when enthusiasts scanning the news would reasonably have the information but don't give information that would be hard to discover. For example, if you said: "International relations are tense due to unrelated trade disputes and technological competition.", that would be overly vague because it would be well known which specific countries have strained relationships and ongoing trade disputes. You should state specifics in cases like that. Do not create large fictious entities like countries or intergovernmental organizations. You are allowed to create some fictional small companies if the time is sufficiently far in the future but you should prefer to use already-existing entities.
+Give concrete details when enthusiasts scanning the news would reasonably have the information but don't give information that would be hard to discover. For example, if you said: "International relations are tense due to unrelated trade disputes and technological competition.", that would be overly vague because it wouldn't be well known which specific countries have strained relationships and ongoing trade disputes. You should state specifics in cases like that. Do not create large fictious entities like countries or intergovernmental organizations. You are allowed to create some fictional small companies if the time is sufficiently far in the future, but you should prefer to use already-existing entities.
 
 We will send various kinds of messages:
 INFO: This is a request for information that we think we would already know about the world. It must not advance the scenario clock.
@@ -183,7 +183,7 @@ export class OpenAIService {
       const forecasterDeveloperMessage: ChatCompletionMessageParam = {
         role: "developer",
         content: `You are a superforecaster specialized in analyzing complex scenarios and predicting outcomes with high calibration.
-You are a master of marrying your fine-grained world-models and knowledge of base-rates with mathematical rules like Laplace's rule of succession and Bayes' rule.
+You are a master of coupling your fine-grained world-models and knowledge of base-rates with mathematical rules like Laplace's rule of succession and Bayes' rule.
 
 You will see a few kinds of interactions from the players:
 - FEED: This is information that you should incorporate into your model of the world and treat as true. The players do this so that they can correct your misunderstanding of the world in important ways. It must never consume any time in the world.

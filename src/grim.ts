@@ -26,7 +26,7 @@ interface SessionData {
 type BotContext = Context & SessionFlavor<SessionData>;
 
 // Create bot instance
-const bot = new Bot<BotContext>(process.env.BOT_TOKEN || "");
+const bot = new Bot<BotContext>(process.env.TELEGRAM_BOT_TOKEN || "");
 
 // Helper function to generate hash for scenario state
 const generateStateHash = (state: ScenarioState): string => {

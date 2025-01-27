@@ -3,6 +3,7 @@ import { Player } from "./types";
 import logger from "./logger";
 import { ChatCompletion, ChatCompletionCreateParamsNonStreaming, ChatCompletionMessageParam } from "openai/resources/chat/completions.mjs";
 import { UserAction } from "./types";
+import { XMLBuilder } from 'fast-xml-parser';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -10,36 +11,35 @@ const openai = new OpenAI({
 
 const maxIntelligenceModelParams: Pick<ChatCompletionCreateParamsNonStreaming, "model" | "reasoning_effort"> = { model: "o1", reasoning_effort: 'high' };
 
-export const getPlayerDescription = (players: Player[]) =>
-  players.map(p => `${p.name} - ${p.role}`).join('\n');
+export const playerDescriptionsXml = (players: Player[]): string => {
+  const builder = new XMLBuilder({
+    format: true,
+    ignoreAttributes: true,
+  });
 
-export const getInitialPrompt = (players: Player[]) => `You are an expert wargame facilitator, applying the best practices from military and other emergency response wargaming. Create a training scenario.
+  const xml = builder.build({
+    playerDescriptions: {
+      player: players.map(p => ({
+        name: p.name,
+        role: p.role
+      }))
+    }
+  });
 
-The players in the game are:
-${getPlayerDescription(players)}
+  logger.debug("Player descriptions", { xml });
 
-You will be given a scenario and your first message should set the stage of what is going on the in world, which may or may not clearly be a crisis. The end of the message should include the starting scenario datetime, current scenario datetime, and time offset since the beginning of the scenario (e.g. T+1day,12hours). All times should be in UTC. The first message should be at the beginning of the scenario and always have a time offset of T+0.
+  return xml;
+};
 
-When answering questions and judging the results of our actions, assume we don't have any special resources. We are just a group of people distributed around the world with internet connections.
-Think through the results of our actions step by step. For instance, you could assign probabilities to various outcomes and then sample from those proabilities.
+export const getInitialPrompt = (players: Player[]) => `You are an expert wargame facilitator, applying the best practices from military and other emergency response wargaming.
 
-Give concrete details when enthusiasts scanning the news would reasonably have the information but don't give information that would be hard to discover. For example, if you said: "International relations are tense due to unrelated trade disputes and technological competition.", that would be overly vague because it wouldn't be well known which specific countries have strained relationships and ongoing trade disputes. You should state specifics in cases like that. Do not create large fictious entities like countries or intergovernmental organizations. You are allowed to create some fictional small companies if the time is sufficiently far in the future, but you should prefer to use already-existing entities.
+The players in the game and their roles are:
 
-We will send various kinds of messages:
-INFO: This is a request for information that we think we would already know about the world. It must not advance the scenario clock.
-FEED: This is information that you should incorporate into the facts about the world. It must not advance the scenario clock.
-ACTION: This is an action we take in the world. It may include getting information or taking other actions. We will include the time we would try to spend getting this information and the rough strategy we'd use. Given the strategy and time, simulate the degree to which it succeeds and incorporate the results in your next message. This can advance the scenario clock.
+${playerDescriptionsXml(players)}
 
-Each player can take actions concurrently with other players.
-So for example, if these were the actions taken:
+You will be given a scenario and your first message should set the stage of what is going on the in world, which may or may not clearly be a crisis. Your job is not to direct the players or make any assumptions about what they or their organizations are already doing. You are just laying out the scenario. The end of the message should include the starting scenario datetime, current scenario datetime, and time offset since the beginning of the scenario (e.g. T+1day,12hours). All times should be in UTC. The first message should be at the beginning of the scenario and always have a time offset of T+0.
 
-ACTION Alice: 2 hours to foo.
-ACTION Bob: takes 3 hours to bar.
-ACTION Charlie: takes 4 hours to baz.
-
-You would advance the scenario clock by 2 hours since that is the smallest time and report on what has happened with the world and everyone's actions during that time. Everyone can then choose anew what they will do in the new state of the world, including continuing their previous action if it was in progress.
-
-DO NOT TAKE ANY ACTIONS THAT ARE NOT EXPLICITLY INSTRUCTED BY THE PLAYERS.
+Give concrete details when enthusiasts scanning the news would reasonably have the information but don't give information that would be hard to discover. For example, if you said: "International relations are tense due to unrelated trade disputes and technological competition." or "A legislative decision in the US has sparked protests", those would be overly vague because it would be well known which specific countries have strained relationships over what and which specific legislation has been passed that is causing protests. You should state specifics in cases like that. Do not create large fictious entities like countries or intergovernmental organizations. You are allowed to create some fictional small companies if the time is sufficiently far in the future, but you should prefer to use already-existing entities.
 
 Please begin the scenario.`;
 

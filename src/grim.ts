@@ -235,11 +235,11 @@ scenarioCommands
       ctx.session.scenarioState.isActive = true;
       ctx.session.scenarioState.messages = messages;
 
-      // Save initial state
       const hash = saveState(ctx);
 
       await sendChunkedReply(ctx, messages[messages.length - 1].content as string);
-      await reply(ctx, `Initial state saved with hash: ${hash}`);
+      await reply(ctx, "Initial state saved with hash:");
+      await reply(ctx, hash);
 
       logger.info("Scenario started successfully", {
         userId: ctx.from?.id,
@@ -373,9 +373,6 @@ gameCommands.command("process", async (ctx) => {
 
     const lastMessage = processActionsResult[processActionsResult.length - 1];
 
-    // Save current state before updating
-    const hash = saveState(ctx);
-
 
     const formattedMessages = ctx.session.actionQueue.map(action => {
       switch (action.type) {
@@ -393,6 +390,8 @@ gameCommands.command("process", async (ctx) => {
       content: formattedMessages
     });
     ctx.session.scenarioState.messages.push(lastMessage);
+
+    const hash = saveState(ctx);
 
     logger.info({ canonicalScenarioMessages: ctx.session.scenarioState.messages });
 

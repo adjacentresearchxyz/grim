@@ -5,7 +5,7 @@ import logger from "./logger";
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import crypto from 'crypto';
-import { Player, UserAction } from "./types";
+import { Player, UserInteraction, UserInteractionType } from "./types";
 import { ChatCompletionMessageParam } from "openai/resources/index.mjs";
 
 config();
@@ -19,7 +19,7 @@ interface ScenarioState {
 interface SessionData {
   roleAssignments: Map<number, Player>;
   scenarioState: ScenarioState;
-  actionQueue: UserAction[];
+  actionQueue: UserInteraction[];
   scenarioCheckpoints: Map<string, ScenarioState>;
 }
 
@@ -262,11 +262,11 @@ scenarioCommands
 const gameCommands = scenarioCommands.filter(requireScenario);
 
 // Helper function to format queue for display
-const formatQueue = (queue: UserAction[]): string => {
+const formatQueue = (queue: UserInteraction[]): string => {
   if (queue.length === 0) return "Queue is empty";
 
   return queue.map((action, index) =>
-    `${index + 1}. ${action.player.name} - ${action.type.toUpperCase()}: ${action.content}`
+    `${index + 1}. ${action.player.name} - ${action.type}: ${action.content}`
   ).join('\n');
 };
 
@@ -280,7 +280,7 @@ gameCommands.command("info", async (ctx) => {
 
   const player = ctx.session.roleAssignments.get(ctx.from?.id!)!;
   ctx.session.actionQueue.push({
-    type: 'info',
+    type: UserInteractionType.INFO,
     player,
     content: message
   });
@@ -303,7 +303,7 @@ gameCommands.command("feed", async (ctx) => {
 
   const player = ctx.session.roleAssignments.get(ctx.from?.id!)!;
   ctx.session.actionQueue.push({
-    type: 'feed',
+    type: UserInteractionType.FEED,
     player,
     content: message
   });
@@ -325,7 +325,7 @@ gameCommands.command("action", async (ctx) => {
 
   const player = ctx.session.roleAssignments.get(ctx.from?.id!)!;
   ctx.session.actionQueue.push({
-    type: 'action',
+    type: UserInteractionType.ACTION,
     player,
     content: message
   });
@@ -376,12 +376,10 @@ gameCommands.command("process", async (ctx) => {
 
     const formattedMessages = ctx.session.actionQueue.map(action => {
       switch (action.type) {
-        case 'info':
-          return `INFO: ${action.content}`;
-        case 'feed':
-          return `FEED: ${action.content}`;
-        case 'action':
+        case 'ACTION':
           return `ACTION ${action.player.name}: ${action.content}`;
+        default:
+          return `${action.type}: ${action.content}`;
       }
     }).join("\n");
 

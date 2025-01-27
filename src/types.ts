@@ -4,8 +4,14 @@ export interface Player {
   role: string;
 }
 
-export interface UserAction {
-  type: 'info' | 'feed' | 'action';
+export interface UserInteraction {
+  type: UserInteractionType;
   player: Player;
   content: string;
+}
+
+export enum UserInteractionType {
+  INFO = 'INFO',
+  FEED = 'FEED',
+  ACTION = 'ACTION'
 }

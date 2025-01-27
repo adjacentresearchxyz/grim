@@ -149,13 +149,24 @@ bot.command("role", async (ctx) => {
     return;
   }
 
-  // Parse role format
-  const parts = roleDescription.split("-").map(part => part.trim());
+  const invalidRoleFormatMessage = "Invalid role format. Please use: /role <Your Name> - <Your Role>\n" +
+    "Example: /role John Smith - Chief Technology Officer at TechCorp";
+  const indexOfDash = roleDescription.indexOf('-');
+  if (indexOfDash === -1) {
+    await reply(
+      ctx,
+      invalidRoleFormatMessage
+    );
+    return;
+  }
+  const parts = [
+    roleDescription.substring(0, indexOfDash),
+    roleDescription.substring(indexOfDash + 1)
+  ].map(part => part.trim());
   if (parts.length !== 2) {
     await reply(
       ctx,
-      "Invalid role format. Please use: /role <Your Name> - <Your Role>\n" +
-      "Example: /role John Smith - Chief Technology Officer at TechCorp"
+      invalidRoleFormatMessage
     );
     return;
   }

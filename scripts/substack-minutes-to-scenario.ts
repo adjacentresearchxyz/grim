@@ -1,6 +1,9 @@
 import { promises as fs } from 'fs'
 import path from 'path'
 import { encoding_for_model } from '@dqbd/tiktoken'
+import { XMLBuilder, XMLParser } from 'fast-xml-parser'
+import pretty from 'pretty'
+import logger from '../src/logger'
 
 const POSTS_DIR = 'posts'
 const OUTPUT_FILE = 'sentinel-grounded-scenario.txt'
@@ -25,6 +28,50 @@ const countTokens = (text: string): number => {
   return tokens.length
 }
 
+const formatXml = (posts: Post[]): string => {
+  const parser = new XMLParser({
+    ignoreAttributes: false,
+    preserveOrder: true,
+    parseTagValue: true,
+    parseAttributeValue: true,
+    trimValues: false,
+    unpairedTags: ["img", "br", "hr", "source"],
+    stopNodes: ["*.script", "*.style"]
+  })
+
+  const builder = new XMLBuilder({
+    format: true,
+    indentBy: '  ',
+    suppressEmptyNode: true,
+    ignoreAttributes: false,
+    preserveOrder: true,
+    unpairedTags: ["img", "br", "hr", "source"]
+  })
+
+  const postsData = posts.map(p => {
+    try {
+      const parsedContent = parser.parse(p.content)
+      return {
+        post: [
+          { ':@': { filename: p.filename } },
+          ...parsedContent
+        ]
+      }
+    } catch (error) {
+      logger.error('Failed to parse post', { filename: p.filename, error })
+      return {
+        post: [
+          { ':@': { filename: p.filename } },
+          { '#text': p.content }
+        ]
+      }
+    }
+  })
+
+  const data = [{ posts: postsData }]
+  return builder.build(data)
+}
+
 const processFiles = async (): Promise<void> => {
   try {
     // Read all files from posts directory
@@ -35,6 +82,8 @@ const processFiles = async (): Promise<void> => {
       .filter(file => file.endsWith('.html'))
       .sort((a, b) => extractNumericPrefix(a) - extractNumericPrefix(b))
 
+    logger.info('Processing files', { files: htmlFiles })
+
     // Read content of each file
     const posts: Post[] = await Promise.all(
       htmlFiles.map(async filename => ({
@@ -43,9 +92,7 @@ const processFiles = async (): Promise<void> => {
       }))
     )
 
-    const postsXml = `<posts>
-${posts.map(post => `<post filename="${post.filename}">\n${post.content}\n</post>`).join('\n\n')}
-</posts>`
+    const postsXml = formatXml(posts)
 
     const prompt = `${BEFORE_DIRECTIVE}
 
@@ -54,11 +101,9 @@ ${postsXml}
 ${AFTER_DIRECTIVE}
 `
 
-    // Write to output file
     await fs.writeFile(OUTPUT_FILE, prompt, 'utf-8')
     console.log(`Successfully combined ${posts.length} posts into ${OUTPUT_FILE}`)
 
-    // Get token count
     const tokenCount = countTokens(prompt)
     console.log(`Total token count: ${tokenCount}`)
 

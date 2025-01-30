@@ -394,7 +394,8 @@ gameCommands.command("process", async (ctx) => {
     logger.info({ canonicalScenarioMessages: ctx.session.scenarioState.messages });
 
     await sendChunkedReply(ctx, lastMessage.content as string);
-    await reply(ctx, `State saved with hash: ${hash}`);
+    await reply(ctx, `State saved with hash:`);
+    await reply(ctx, hash);
 
     // Clear the queue after successful processing
     ctx.session.actionQueue = [];

@@ -30,7 +30,7 @@ You can get an OpenAI key from [platform.openai.com/settings](https://platform.o
 
 ## Contributing
 
-Contributions are very welcome; fork the repo and make pull request, or make an issue to suggest an improvement. 
+We're happy to do some hand-holding to onboard a contributer who may want to contribute consistently! Feel free to ask for clarification in any of the outstanding issues or [request a call](mailto:hello@sentinel-team.org). If you request a call, quickly describe your background or provide a link to your work. Otherwise, feel free to fork the repo, make pull requests, or make issues suggesting improvements. 
 
 ## License
 

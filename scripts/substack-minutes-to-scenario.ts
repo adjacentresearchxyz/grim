@@ -2,7 +2,6 @@ import { promises as fs } from 'fs'
 import path from 'path'
 import { encoding_for_model } from '@dqbd/tiktoken'
 import { XMLBuilder, XMLParser } from 'fast-xml-parser'
-import pretty from 'pretty'
 import logger from '../src/logger'
 
 const POSTS_DIR = 'posts'
@@ -30,22 +29,41 @@ const countTokens = (text: string): number => {
 
 const formatXml = (posts: Post[]): string => {
   const parser = new XMLParser({
-    ignoreAttributes: false,
-    preserveOrder: true,
+    ignoreAttributes: true,
+    preserveOrder: false,
     parseTagValue: true,
-    parseAttributeValue: true,
-    trimValues: false,
+    parseAttributeValue: false,
+    trimValues: true,
     unpairedTags: ["img", "br", "hr", "source"],
-    stopNodes: ["*.script", "*.style"]
+    stopNodes: [
+      "*.script",
+      "*.style",
+      "*.nav",
+      "*.footer",
+      "*.header"
+    ],
+    tagValueProcessor: (tagName: string, value: string) => {
+      return value
+        .replace(/&nbsp;/g, ' ')
+        .replace(/&amp;/g, '&')
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/\s+/g, ' ')
+    }
   })
 
   const builder = new XMLBuilder({
-    format: true,
-    indentBy: '  ',
+    format: false,
     suppressEmptyNode: true,
-    ignoreAttributes: false,
-    preserveOrder: true,
-    unpairedTags: ["img", "br", "hr", "source"]
+    ignoreAttributes: true,
+    preserveOrder: false,
+    unpairedTags: ["img", "br", "hr", "source"],
+    tagValueProcessor: (tagName: string, value: unknown) => {
+      if (typeof value === 'string' && ["p", "article", "section", "h1", "h2", "h3"].includes(tagName)) {
+        return value.trim();
+      }
+      return value;
+    }
   })
 
   const postsData = posts.map(p => {

@@ -83,7 +83,7 @@ function sampleFromWeightedOutcomes(outcomes: Outcome[]): string {
   return outcomes[outcomes.length - 1].outcome;
 }
 
-export class OpenAIService {
+export class ChatService {
   constructor(private readonly openAIClient: IOpenAIClient) { }
 
   async initializeScenario(scenario: string, players: Player[]): Promise<ChatCompletionMessageParam[]> {

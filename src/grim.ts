@@ -1,6 +1,6 @@
 import { Bot, Context, session, SessionFlavor, Middleware } from "grammy";
 import { config } from "dotenv";
-import { OpenAIService, DefaultOpenAIClient } from "./openai";
+import { ChatService, DefaultOpenAIClient } from "./openai";
 import logger from "./logger";
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
@@ -29,7 +29,7 @@ type BotContext = Context & SessionFlavor<SessionData>;
 const bot = new Bot<BotContext>(process.env.TELEGRAM_BOT_TOKEN || "");
 
 const openAIClient = new DefaultOpenAIClient(process.env.OPENAI_API_KEY || "");
-const openAIService = new OpenAIService(openAIClient);
+const openAIService = new ChatService(openAIClient);
 
 // Helper function to generate hash for scenario state
 const generateStateHash = (state: ScenarioState): string => {

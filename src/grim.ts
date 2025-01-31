@@ -393,7 +393,7 @@ gameCommands.command("process", async (ctx) => {
 
     const hash = saveState(ctx);
 
-    logger.info({ canonicalScenarioMessages: ctx.session.scenarioState.messages });
+    logger.info("Canonical scenario messages", ctx.session.scenarioState.messages);
 
     await sendChunkedReply(ctx, lastMessage.content as string);
     await reply(ctx, `State saved with hash:`);

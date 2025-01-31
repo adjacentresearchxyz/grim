@@ -5,11 +5,29 @@ import { ChatCompletion, ChatCompletionCreateParamsNonStreaming, ChatCompletionM
 import { XMLBuilder } from 'fast-xml-parser';
 import { partition } from "./utils/array";
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
 const maxIntelligenceModelParams: Pick<ChatCompletionCreateParamsNonStreaming, "model" | "reasoning_effort"> = { model: "o1", reasoning_effort: 'high' };
+
+export interface IOpenAIClient {
+  logAndCreateChatCompletion(params: ChatCompletionCreateParamsNonStreaming): Promise<ChatCompletion>;
+}
+
+export class DefaultOpenAIClient implements IOpenAIClient {
+  private client: OpenAI;
+
+  constructor(apiKey: string) {
+    this.client = new OpenAI({ apiKey });
+  }
+
+  async logAndCreateChatCompletion(params: ChatCompletionCreateParamsNonStreaming): Promise<ChatCompletion> {
+    logger.debug("Requesting completion", { params });
+    const completion = await this.client.chat.completions.create({
+      ...params,
+      stream: false
+    });
+    logger.debug("Completion response", { completion });
+    return completion as ChatCompletion;
+  }
+}
 
 export const playerDescriptionsXml = (players: Player[]): string => {
   const builder = new XMLBuilder({
@@ -65,18 +83,10 @@ function sampleFromWeightedOutcomes(outcomes: Outcome[]): string {
   return outcomes[outcomes.length - 1].outcome;
 }
 
-async function loggedCompletionCreation(params: Parameters<typeof openai.chat.completions.create>[0]): Promise<ChatCompletion> {
-  logger.debug("Requesting completion", { params });
-  const completion = await openai.chat.completions.create({
-    ...params,
-    stream: false
-  });
-  logger.debug("Completion response", { completion });
-  return completion as ChatCompletion;
-}
-
 export class OpenAIService {
-  static async initializeScenario(scenario: string, players: Player[]): Promise<ChatCompletionMessageParam[]> {
+  constructor(private readonly openAIClient: IOpenAIClient) { }
+
+  async initializeScenario(scenario: string, players: Player[]): Promise<ChatCompletionMessageParam[]> {
     try {
       logger.info("Initializing scenario", {
         scenario,
@@ -98,7 +108,7 @@ export class OpenAIService {
         messageLength: scenario.length
       });
 
-      const completion = await loggedCompletionCreation({
+      const completion = await this.openAIClient.logAndCreateChatCompletion({
         ...maxIntelligenceModelParams,
         messages: [gameMasterDeveloperMessage, scenarioMessage],
       });
@@ -123,7 +133,7 @@ export class OpenAIService {
     }
   }
 
-  static async processActions(
+  async processActions(
     canonicalScenarioMessages: ChatCompletionMessageParam[],
     actions: UserInteraction[],
   ): Promise<ChatCompletionMessageParam[]> {
@@ -213,7 +223,7 @@ ${action.type} ${action.player.name}: ${action.content}`
           actionIndex: index
         });
 
-        const completion = await loggedCompletionCreation({
+        const completion = await this.openAIClient.logAndCreateChatCompletion({
           ...forecastConfig,
           messages: [
             forecasterDeveloperMessage,
@@ -273,7 +283,7 @@ Just like the previous messages in the chat describing the world, you should inc
         messageLength: gameMasterRequestMessage.content.length
       });
 
-      const narratorCompletion = await loggedCompletionCreation({
+      const narratorCompletion = await this.openAIClient.logAndCreateChatCompletion({
         ...maxIntelligenceModelParams,
         messages: [gameMasterDeveloperMessage, ...canonicalScenarioMessages, gameMasterRequestMessage],
       });

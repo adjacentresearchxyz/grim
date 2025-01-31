@@ -1,6 +1,8 @@
-import { OpenAIService } from '../src/openai';
-import { Player } from '../src/types';
-import { UserAction } from '../src/types';
+import { OpenAIService, DefaultOpenAIClient } from '../src/openai';
+import { Player, UserInteraction, UserInteractionType } from '../src/types';
+
+const openAIClient = new DefaultOpenAIClient(process.env.OPENAI_API_KEY || "");
+const openAIService = new OpenAIService(openAIClient);
 
 const rai = {
   id: 1,
@@ -21,32 +23,32 @@ const players: Player[] = [
 
 const scenarioTopic = 'Social unrest due to unemployment from AI.';
 
-const canonicalScenarioHistory = await OpenAIService.initializeScenario(scenarioTopic, players);
+const canonicalScenarioHistory = await openAIService.initializeScenario(scenarioTopic, players);
 
-const mockActions: UserAction[] = [
+const mockActions: UserInteraction[] = [
   {
-    type: 'action',
+    type: UserInteractionType.ACTION,
     player: rai,
     content: '1 hour of research on what heads of state are saying about this.'
   },
   {
-    type: 'action',
+    type: UserInteractionType.ACTION,
     player: rai,
     content: '30 minutes of research into how the stock market is reacting'
   },
   {
-    type: 'info',
+    type: UserInteractionType.INFO,
     player: nuno,
     content: 'What is the unemployment rate in the US?'
   },
   {
-    type: 'action',
+    type: UserInteractionType.ACTION,
     player: nuno,
     content: '1 hour of messaging with friends and family about finding shelf-stable food, water, and being ready to shelter in place.'
   }
 ];
 
-const result = await OpenAIService.processActions(canonicalScenarioHistory, mockActions);
+const result = await openAIService.processActions(canonicalScenarioHistory, mockActions);
 for (const message of result) {
   console.log(message.role);
   console.log(message.content);

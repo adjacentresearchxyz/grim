@@ -9,20 +9,28 @@ const maxIntelligenceModelParams: Pick<ChatCompletionCreateParamsNonStreaming, "
 
 export interface IOpenAIClient {
   logAndCreateChatCompletion(params: ChatCompletionCreateParamsNonStreaming): Promise<ChatCompletion>;
+  setSeed(seed: number | undefined): void;
 }
 
 export class DefaultOpenAIClient implements IOpenAIClient {
   private client: OpenAI;
+  private seed: number | undefined;
 
-  constructor(apiKey: string) {
+  constructor(apiKey: string, seed?: number) {
     this.client = new OpenAI({ apiKey });
+    this.seed = seed;
+  }
+
+  setSeed(seed: number | undefined): void {
+    this.seed = seed;
   }
 
   async logAndCreateChatCompletion(params: ChatCompletionCreateParamsNonStreaming): Promise<ChatCompletion> {
     logger.debug("Requesting completion", { params });
     const completion = await this.client.chat.completions.create({
       ...params,
-      stream: false
+      stream: false,
+      seed: this.seed
     });
     logger.debug("Completion response", { completion });
     return completion as ChatCompletion;

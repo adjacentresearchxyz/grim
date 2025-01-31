@@ -1,7 +1,8 @@
 import { ChatService, DefaultOpenAIClient } from '../src/openai';
 import { Player, UserInteraction, UserInteractionType } from '../src/types';
 
-const openAIClient = new DefaultOpenAIClient(process.env.OPENAI_API_KEY || "");
+const SEED = 42;
+const openAIClient = new DefaultOpenAIClient(process.env.OPENAI_API_KEY || "", SEED);
 const openAIService = new ChatService(openAIClient);
 
 const rai = {

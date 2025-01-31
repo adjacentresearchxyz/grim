@@ -123,56 +123,6 @@ export class OpenAIService {
     }
   }
 
-  static async chat(
-    message: string,
-    player: Player,
-    history: ChatCompletionMessageParam[]
-  ): Promise<ChatCompletionMessageParam[]> {
-    try {
-      logger.info("Processing chat message", {
-        messageType: message.split(":")[0],
-        playerName: player.name,
-        historyLength: history.length
-      });
-
-      const newMessage: ChatCompletionMessageParam = {
-        role: "user",
-        content: message
-      };
-
-      logger.debug("Sending message to OpenAI", {
-        messageLength: message.length,
-        historyMessages: history.length
-      });
-
-      const completion = await loggedCompletionCreation({
-        ...maxIntelligenceModelParams,
-        messages: [...history, newMessage],
-      });
-
-      const response = completion.choices[0].message.content || "Failed to generate response";
-
-      logger.info("Chat message processed successfully", {
-        responseLength: response.length,
-        newHistoryLength: history.length + 2
-      });
-
-      return [
-        ...history,
-        newMessage,
-        { role: "assistant", content: response }
-      ];
-    } catch (error) {
-      logger.error("Failed to process chat message", {
-        error,
-        messageType: message.split(":")[0],
-        playerName: player.name,
-        historyLength: history.length
-      });
-      throw error;
-    }
-  }
-
   static async processActions(
     canonicalScenarioMessages: ChatCompletionMessageParam[],
     actions: UserInteraction[],

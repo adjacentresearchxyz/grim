@@ -286,7 +286,7 @@ First, you must incorporate the FEED messages into your model of the world and t
 Then, tell the players the result of their INFO requests. This also doesn't take up any time in the world.
 Then, tell the players the results of their ACTIONs. These do advance the game clock.
 
-Important note because previous iterations of you kept making this mistake: If only a small amount of time has passed, such as a few hours, it's very unlikely that the world has changed too much. At certain times during certain crises, news will come out quickly, but usually significant changes take at least days to unfold.
+Important note because previous iterations of you kept making this mistake: If only a small amount of time has passed, such as a few hours, it's very unlikely that the world has changed too much. At certain times during certain crises, news will come out quickly, but usually significant changes take at least days to unfold. At the same time, these scenarios are more useful if they escalate. So if sufficient time has passed, you should include escalatory events.
     
 Just like the previous messages in the chat describing the world, you should include the scenario datetime and offset since the beginning of the scenario (e.g. T+1day,12hours). All times are in UTC.
 

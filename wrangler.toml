@@ -4,13 +4,13 @@ compatibility_date = "2024-03-10"
 compatibility_flags = ["nodejs_compat"]
 
 [vars]
-TELEGRAM_BOT_TOKEN = "7976458351:AAHIvN_c6iH0kuMDcN3HIuhYW-6H7-PgoLg"
-ANTHROPIC_API_KEY = "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"
+TELEGRAM_BOT_TOKEN = ""
+ANTHROPIC_API_KEY = ""
 
 [[kv_namespaces]]
 binding = "GRIM_SESSIONS"
-id = "3dbaa111ff86426a91a712eff75f74e5" # Replace with actual KV namespace ID when deploying
-preview_id = "2552637322b64106a47031d93427daf0" # Replace with actual preview KV namespace ID when testing
+id = "" # Replace with actual KV namespace ID when deploying
+preview_id = "" # Replace with actual preview KV namespace ID when testing
 
 # Cron Trigger
 # This is for webhook cleanup, disabled by default

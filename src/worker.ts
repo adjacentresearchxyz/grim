@@ -13,11 +13,33 @@ const router = Router();
 
 // Helper function to read a preloaded scenario if available
 async function readPreloadedScenario(env: Env): Promise<string | undefined> {
+  if (!env.GRIM_SESSIONS) {
+    logger.error('Cannot read preloaded scenario - KV namespace not available');
+    console.error('Cannot read preloaded scenario - KV namespace not available');
+    return undefined;
+  }
+  
   try {
+    console.log('Attempting to read preloaded scenario from KV');
     const scenario = await env.GRIM_SESSIONS.get('preloaded_scenario');
-    return scenario || undefined;
+    
+    if (scenario) {
+      console.log('Found preloaded scenario');
+      logger.info('Found preloaded scenario', { 
+        size: scenario.length,
+        preview: scenario.substring(0, 50) + '...'
+      });
+      return scenario;
+    } else {
+      console.log('No preloaded scenario found');
+      return undefined;
+    }
   } catch (error) {
-    logger.error('Error reading preloaded scenario', { error });
+    console.error('Error reading preloaded scenario:', error);
+    logger.error('Error reading preloaded scenario', { 
+      error,
+      errorMessage: error instanceof Error ? error.message : String(error)
+    });
     return undefined;
   }
 }
@@ -105,28 +127,100 @@ router.post('/preload-scenario', async (request, env: Env) => {
 
 // Route to handle Telegram webhook updates
 router.post('/webhook', async (request, env: Env) => {
+  console.log("=== STARTING WEBHOOK HANDLER IN WORKER ===");
   try {
-    // Parse the incoming update
-    const update = await request.json();
+    // Validate environment variables
+    if (!env.TELEGRAM_BOT_TOKEN) {
+      throw new Error("TELEGRAM_BOT_TOKEN is not defined");
+    }
     
-    // Create bot instance
-    const preloadedScenario = await readPreloadedScenario(env);
-    const bot = new TelegramBot(
-      env.TELEGRAM_BOT_TOKEN,
-      env.ANTHROPIC_API_KEY,
-      env.GRIM_SESSIONS,
-      preloadedScenario
-    );
+    if (!env.ANTHROPIC_API_KEY) {
+      throw new Error("ANTHROPIC_API_KEY is not defined");
+    }
     
-    // Handle the update
-    await bot.handleUpdate(update);
+    if (!env.GRIM_SESSIONS) {
+      throw new Error("GRIM_SESSIONS KV namespace is not properly bound");
+    }
     
-    return new Response('OK', { status: 200 });
-  } catch (error) {
-    logger.error('Error handling webhook', { error });
-    return new Response('Error handling webhook: ' + (error as Error).message, {
-      status: 500
+    // Log request information
+    console.log("Webhook request received:", {
+      method: request.method,
+      url: request.url
     });
+    
+    logger.info('Webhook request received', {
+      method: request.method,
+      url: request.url,
+      contentType: request.headers.get('content-type'),
+      contentLength: request.headers.get('content-length')
+    });
+    
+    // Parse the incoming update
+    let update;
+    try {
+      // Clone the request to preserve the body
+      const requestClone = request.clone();
+      const rawBody = await requestClone.text();
+      
+      // Only log a portion of the body for debugging
+      console.log("Raw request body preview:", rawBody.substring(0, 200));
+      
+      // Parse the JSON
+      update = JSON.parse(rawBody);
+      
+    } catch (parseError) {
+      console.error("JSON parsing error:", parseError);
+      logger.error('Failed to parse update JSON', { 
+        error: parseError,
+        errorMessage: (parseError as Error).message
+      });
+      
+      return new Response('OK - Failed to parse, but OK response to prevent retries', { status: 200 });
+    }
+    
+    console.log("Creating TelegramBot instance...");
+    
+    try {
+      // Read any preloaded scenario
+      const preloadedScenario = await readPreloadedScenario(env);
+      
+      // Create the bot instance
+      const bot = new TelegramBot(
+        env.TELEGRAM_BOT_TOKEN, 
+        env.ANTHROPIC_API_KEY,
+        env.GRIM_SESSIONS,
+        preloadedScenario
+      );
+      
+      console.log("Bot instance created, handling update...");
+      
+      // Process the update
+      const result = await bot.handleUpdate(update);
+      console.log("Update handled successfully");
+      return result;
+      
+    } catch (botError) {
+      console.error("Bot error:", botError);
+      logger.error('Bot error', { 
+        error: botError,
+        errorMessage: (botError as Error).message,
+        stack: (botError as Error).stack
+      });
+      
+      return new Response('OK - Bot error, but OK response to prevent retries', { status: 200 });
+    }
+    
+  } catch (error) {
+    console.error("CRITICAL ERROR in webhook route:", error);
+    logger.error('Critical error in webhook route', {
+      message: (error as Error)?.message || 'Unknown error',
+      name: (error as Error)?.name || 'Error',
+      stack: (error as Error)?.stack
+    });
+    
+    return new Response('OK - Critical error, but OK response to prevent retries', { status: 200 });
+  } finally {
+    console.log("=== ENDING WEBHOOK HANDLER IN WORKER ===");
   }
 });
 

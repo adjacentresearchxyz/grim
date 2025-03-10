@@ -73,6 +73,7 @@ class CloudflareLogger {
   }
 }
 
-const logger = new CloudflareLogger({ level: 'debug' });
+// Set to most verbose level for troubleshooting
+const logger = new CloudflareLogger({ level: 'silly' });
 
 export default logger;

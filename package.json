@@ -6,7 +6,7 @@
     "dotenv": "^16.4.7",
     "fast-xml-parser": "^4.5.1",
     "grammy": "^1.34.0",
-    "itty-router": "^4.0.27",
+    "itty-router": "^4.2.2",
     "winston": "^3.17.0",
     "yargs": "^17.7.2"
   },

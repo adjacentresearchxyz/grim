@@ -1,0 +1,25 @@
+name = "grim"
+main = "src/worker.ts"
+compatibility_date = "2024-03-10"
+
+[vars]
+# These are example values that will be replaced in production
+# by actual environment variable bindings
+TELEGRAM_BOT_TOKEN = ""
+ANTHROPIC_API_KEY = ""
+
+[[kv_namespaces]]
+binding = "GRIM_SESSIONS"
+id = "example-kv-id" # Replace with actual KV namespace ID when deploying
+preview_id = "example-preview-kv-id" # Replace with actual preview KV namespace ID when testing
+
+# Cron Trigger
+# This is for webhook cleanup, disabled by default
+# [triggers]
+# crons = ["0 0 * * *"] # Run daily at midnight UTC
+
+[env.production]
+# Production-specific settings will be configured here
+
+[env.development]
+# Development-specific settings will be configured here
